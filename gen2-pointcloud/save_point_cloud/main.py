@@ -2,12 +2,13 @@
 Adapted from https://github.com/marco-paladini/depthai-python/blob/main/examples/StereoDepth/rgb_depth_aligned.py"""
 #!/usr/bin/env python3
 
-import cv2
-import numpy as np
-import depthai as dai
-import open3d as o3d
 import json
 import time
+
+import cv2
+import depthai as dai
+import numpy as np
+import open3d as o3d
 
 # Weights to use when blending depth/rgb image (should equal 1.0)
 rgbWeight = 0.4
@@ -22,7 +23,7 @@ def updateBlendWeights(percent_rgb):
     """
     global depthWeight
     global rgbWeight
-    rgbWeight = float(percent_rgb)/100.0
+    rgbWeight = float(percent_rgb) / 100.0
     depthWeight = 1.0 - rgbWeight
 
 
@@ -35,6 +36,8 @@ monoResolution = dai.MonoCameraProperties.SensorResolution.THE_720_P
 # widhth and height that match `monoResolution` above
 width = 1280
 height = 720
+# max depth (only used for visualisation) in millimeters
+visualisation_max_depth = 4000
 
 # Create pipeline
 pipeline = dai.Pipeline()
@@ -56,11 +59,12 @@ queueNames.append("rgb")
 depthOut.setStreamName("depth")
 queueNames.append("depth")
 
-#Properties
+# Properties
 camRgb.setBoardSocket(dai.CameraBoardSocket.RGB)
 camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
 camRgb.setFps(fps)
-if downscaleColor: camRgb.setIspScale(2, 3)
+if downscaleColor:
+    camRgb.setIspScale(2, 3)
 # For now, RGB needs fixed focus to properly align with depth.
 # This value was used during calibration
 try:
@@ -104,7 +108,9 @@ with device:
     calibData.eepromToJsonFile(calibFile)
     print("wrote", calibFile)
 
-    M_rgb = np.array(calibData.getCameraIntrinsics(dai.CameraBoardSocket.RGB, width, height))
+    M_rgb = np.array(
+        calibData.getCameraIntrinsics(dai.CameraBoardSocket.RGB, width, height)
+    )
     print("RGB Camera resized intrinsics...")
     print(M_rgb)
 
@@ -120,12 +126,21 @@ with device:
     cv2.namedWindow(rgbWindowName)
     cv2.namedWindow(depthWindowName)
     cv2.namedWindow(blendedWindowName)
-    cv2.createTrackbar('RGB Weight %', blendedWindowName, int(rgbWeight*100), 100, updateBlendWeights)
+    cv2.createTrackbar(
+        "RGB Weight %", blendedWindowName, int(rgbWeight * 100), 100, updateBlendWeights
+    )
 
     while True:
-        latestPacket = {"rgb": None, "depth": None, "rectifiedLeft": None, "rectifiedRight": None}
+        latestPacket = {
+            "rgb": None,
+            "depth": None,
+            "rectifiedLeft": None,
+            "rectifiedRight": None,
+        }
 
-        queueEvents = device.getQueueEvents(("rgb", "depth", "rectifiedLeft", "rectifiedRight"))
+        queueEvents = device.getQueueEvents(
+            ("rgb", "depth", "rectifiedLeft", "rectifiedRight")
+        )
         for queueName in queueEvents:
             packets = device.getOutputQueue(queueName).tryGetAll()
             if len(packets) > 0:
@@ -147,11 +162,8 @@ with device:
         if latestPacket["depth"] is not None:
             frameDepth = latestPacket["depth"].getFrame()
             raw_depth = frameDepth.copy().astype(np.uint16)
-            maxDepth = 4000.0  # 4 meters for visualisation
-            # Optional, extend range 0..95 -> 0..255, for a better visualisation
-            if 1: frameDepth = (frameDepth * 255. / maxDepth).astype(np.uint8)
-            # Optional, apply false colorization
-            if 1: frameDepth = cv2.applyColorMap(frameDepth, cv2.COLORMAP_HOT)
+            frameDepth = (frameDepth * 255.0 / visualisation_max_depth).astype(np.uint8)
+            frameDepth = cv2.applyColorMap(frameDepth, cv2.COLORMAP_HOT)
             frameDepth = np.ascontiguousarray(frameDepth)
             cv2.imshow(depthWindowName, frameDepth)
 
@@ -165,25 +177,51 @@ with device:
             frameRgb = None
             frameDepth = None
 
-        if cv2.waitKey(1) == ord('q'):
+        if cv2.waitKey(1) == ord("q"):
+            # save all images
             if cv2.imwrite(f"rgb_{serial_number}_{timestamp}.png", raw_rgb):
                 print("wrote", f"rgb_{serial_number}_{timestamp}.png")
             if cv2.imwrite(f"depth_{serial_number}_{timestamp}.png", raw_depth):
                 print("wrote", f"depth_{serial_number}_{timestamp}.png")
             if cv2.imwrite(f"rectifiedLeft_{serial_number}_{timestamp}.png", raw_left):
                 print("wrote", f"rectifiedLeft_{serial_number}_{timestamp}.png")
-            if cv2.imwrite(f"rectifiedRight_{serial_number}_{timestamp}.png", raw_right):
+            if cv2.imwrite(
+                f"rectifiedRight_{serial_number}_{timestamp}.png", raw_right
+            ):
                 print("wrote", f"rectifiedRight_{serial_number}_{timestamp}.png")
+            # compute point cloud
             pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
                 image=o3d.geometry.RGBDImage.create_from_color_and_depth(
                     o3d.geometry.Image(cv2.cvtColor(raw_rgb, cv2.COLOR_BGR2RGB)),
-                    o3d.geometry.Image(raw_depth)),
-                intrinsic=o3d.camera.PinholeCameraIntrinsic(width=width, height=height, fx=M_rgb[0][0], fy=M_rgb[1][1],
-                                                            cx=M_rgb[0][2], cy=M_rgb[1, 2]),
+                    o3d.geometry.Image(raw_depth),
+                ),
+                intrinsic=o3d.camera.PinholeCameraIntrinsic(
+                    width=width,
+                    height=height,
+                    fx=M_rgb[0][0],
+                    fy=M_rgb[1][1],
+                    cx=M_rgb[0][2],
+                    cy=M_rgb[1, 2],
+                ),
             )
-            if o3d.io.write_point_cloud(f"{serial_number}_{timestamp}.pcd", pcd, compressed=True):
+            # save point cloud
+            if o3d.io.write_point_cloud(
+                f"{serial_number}_{timestamp}.pcd", pcd, compressed=True
+            ):
                 print("wrote", f"{serial_number}_{timestamp}.pcd")
-            with open(f"{serial_number}_{timestamp}_metadata.json", "w", encoding='utf-8') as outfile:
-                json.dump({"serial": serial_number, "fx": M_rgb[0][0], "fy": M_rgb[1][1], "cx": M_rgb[0][2], "cy": M_rgb[1, 2]}, outfile)
+            # save intrinsics
+            with open(
+                f"{serial_number}_{timestamp}_metadata.json", "w", encoding="utf-8"
+            ) as outfile:
+                json.dump(
+                    {
+                        "serial": serial_number,
+                        "fx": M_rgb[0][0],
+                        "fy": M_rgb[1][1],
+                        "cx": M_rgb[0][2],
+                        "cy": M_rgb[1, 2],
+                    },
+                    outfile,
+                )
             print("wrote", f"{serial_number}_{timestamp}_metadata.json")
             break
