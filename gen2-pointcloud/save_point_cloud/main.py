@@ -170,9 +170,9 @@ with device:
                 print("wrote", f"rgb_{serial_number}_{timestamp}.png")
             if cv2.imwrite(f"depth_{serial_number}_{timestamp}.png", raw_depth):
                 print("wrote", f"depth_{serial_number}_{timestamp}.png")
-            if cv2.imwrite(f"rectifiedLeft_{serial_number}_{timestamp}.png"):
+            if cv2.imwrite(f"rectifiedLeft_{serial_number}_{timestamp}.png", raw_left):
                 print("wrote", f"rectifiedLeft_{serial_number}_{timestamp}.png")
-            if cv2.imwrite(f"rectifiedRight_{serial_number}_{timestamp}.png"):
+            if cv2.imwrite(f"rectifiedRight_{serial_number}_{timestamp}.png", raw_right):
                 print("wrote", f"rectifiedRight_{serial_number}_{timestamp}.png")
             pcd = o3d.geometry.PointCloud.create_from_rgbd_image(
                 image=o3d.geometry.RGBDImage.create_from_color_and_depth(
