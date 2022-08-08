@@ -183,7 +183,7 @@ with device:
             )
             if o3d.io.write_point_cloud(f"{serial_number}_{timestamp}.pcd", pcd, compressed=True):
                 print("wrote", f"{serial_number}_{timestamp}.pcd")
-            with open(f"{serial_number}_{timestamp}_metadata.json") as outfile:
+            with open(f"{serial_number}_{timestamp}_metadata.json", "w", encoding='utf-8') as outfile:
                 json.dump({"serial": serial_number, "fx": M_rgb[0][0], "fy": M_rgb[1][1], "cx": M_rgb[0][2], "cy": M_rgb[1, 2]}, outfile)
             print("wrote", f"{serial_number}_{timestamp}_metadata.json")
             break
