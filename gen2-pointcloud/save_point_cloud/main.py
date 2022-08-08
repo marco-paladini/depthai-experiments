@@ -103,7 +103,7 @@ stereo.rectifiedRight.link(xoutRectifRight.input)
 with device:
     serial_number = device.getMxId()
     timestamp = str(int(time.time()))
-    calibFile = f"calib_{serial_number}_{timestamp}.json"
+    calibFile = f"calibration_{serial_number}_{timestamp}.json"
     calibData = device.readCalibration()
     calibData.eepromToJsonFile(calibFile)
     print("wrote", calibFile)
@@ -111,8 +111,6 @@ with device:
     M_rgb = np.array(
         calibData.getCameraIntrinsics(dai.CameraBoardSocket.RGB, width, height)
     )
-    print("RGB Camera resized intrinsics...")
-    print(M_rgb)
 
     device.startPipeline(pipeline)
 
