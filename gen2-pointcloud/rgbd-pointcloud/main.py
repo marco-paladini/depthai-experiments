@@ -1,12 +1,24 @@
 #!/usr/bin/env python3
 
-import time
-from sys import maxsize
-
 import cv2
 import depthai as dai
 import open3d as o3d
+import time
+import collections
 
+
+class FPS:
+    def __init__(self, avarageof=50):
+        self.frametimestamps = collections.deque(maxlen=avarageof)
+    def __call__(self):
+        self.frametimestamps.append(time.time())
+        if(len(self.frametimestamps) > 1):
+            return "{:.2f} fps".format(len(self.frametimestamps)/(self.frametimestamps[-1]-self.frametimestamps[0]))
+        else:
+            return "0.0 fps"
+
+
+fps = FPS()
 COLOR = True
 
 lrcheck = True  # Better handling for occlusions
@@ -72,7 +84,7 @@ xout_rect_right.setStreamName("rectified_right")
 if COLOR:
     camRgb = pipeline.create(dai.node.ColorCamera)
     camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
-    camRgb.setIspScale(1, 3)
+    #camRgb.setIspScale(1, 3)
     camRgb.setColorOrder(dai.ColorCameraProperties.ColorOrder.RGB)
     camRgb.initialControl.setManualFocus(130)
     stereo.setDepthAlign(dai.CameraBoardSocket.RGB)
@@ -114,7 +126,7 @@ class HostSync:
         return False
 
 
-with dai.Device(pipeline) as device:
+with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
 
     device.setIrLaserDotProjectorBrightness(1200)
     qs = []
@@ -149,6 +161,7 @@ with dai.Device(pipeline) as device:
             if new_msg is not None:
                 msgs = sync.add_msg(q.getName(), new_msg)
                 if msgs:
+                    print(fps())
                     depth = msgs["depth"].getFrame()
                     color = msgs["colorize"].getCvFrame()
                     rectified_left = msgs["rectified_left"].getCvFrame()
