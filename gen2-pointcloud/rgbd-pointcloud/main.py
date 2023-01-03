@@ -84,7 +84,7 @@ xout_rect_right.setStreamName("rectified_right")
 if COLOR:
     camRgb = pipeline.create(dai.node.ColorCamera)
     camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
-    #camRgb.setIspScale(1, 3)
+    camRgb.setIspScale(2, 3)
     camRgb.setColorOrder(dai.ColorCameraProperties.ColorOrder.RGB)
     camRgb.initialControl.setManualFocus(130)
     stereo.setDepthAlign(dai.CameraBoardSocket.RGB)
