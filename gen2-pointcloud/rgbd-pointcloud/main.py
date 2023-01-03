@@ -25,8 +25,8 @@ lrcheck = True  # Better handling for occlusions
 extended = False  # Closer-in minimum depth, disparity range is doubled
 subpixel = True  # Better accuracy for longer distance, fractional disparity 32-levels
 # Options: MEDIAN_OFF, KERNEL_3x3, KERNEL_5x5, KERNEL_7x7
-median = dai.StereoDepthProperties.MedianFilter.KERNEL_7x7
-desired_fps = 20
+median = dai.StereoDepthProperties.MedianFilter.KERNEL_5x5
+desired_fps = 10
 
 print("StereoDepth config options:")
 print("    Left-Right check:  ", lrcheck)
