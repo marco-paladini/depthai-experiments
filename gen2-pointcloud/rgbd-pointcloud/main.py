@@ -26,22 +26,25 @@ extended = False  # Closer-in minimum depth, disparity range is doubled
 subpixel = True  # Better accuracy for longer distance, fractional disparity 32-levels
 # Options: MEDIAN_OFF, KERNEL_3x3, KERNEL_5x5, KERNEL_7x7
 median = dai.StereoDepthProperties.MedianFilter.KERNEL_7x7
+desired_fps = 20
 
 print("StereoDepth config options:")
 print("    Left-Right check:  ", lrcheck)
 print("    Extended disparity:", extended)
 print("    Subpixel:          ", subpixel)
 print("    Median filtering:  ", median)
-
+print("    FPS:               ", desired_fps)
 pipeline = dai.Pipeline()
 
 monoLeft = pipeline.create(dai.node.MonoCamera)
 monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
 monoLeft.setBoardSocket(dai.CameraBoardSocket.LEFT)
+monoLeft.setFps(desired_fps)
 
 monoRight = pipeline.create(dai.node.MonoCamera)
 monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
 monoRight.setBoardSocket(dai.CameraBoardSocket.RIGHT)
+monoRight.setFps(desired_fps)
 
 stereo = pipeline.createStereoDepth()
 stereo.setDefaultProfilePreset(dai.node.StereoDepth.PresetMode.HIGH_DENSITY)
@@ -85,6 +88,7 @@ if COLOR:
     camRgb = pipeline.create(dai.node.ColorCamera)
     camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
     camRgb.setIspScale(2, 3)
+    camRgb.setFps(desired_fps)
     camRgb.setColorOrder(dai.ColorCameraProperties.ColorOrder.RGB)
     camRgb.initialControl.setManualFocus(130)
     stereo.setDepthAlign(dai.CameraBoardSocket.RGB)
