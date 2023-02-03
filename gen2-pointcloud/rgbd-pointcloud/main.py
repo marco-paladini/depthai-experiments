@@ -26,8 +26,8 @@ lrcheck = True  # Better handling for occlusions
 extended = False  # Closer-in minimum depth, disparity range is doubled
 subpixel = True  # Better accuracy for longer distance, fractional disparity 32-levels
 # Options: MEDIAN_OFF, KERNEL_3x3, KERNEL_5x5, KERNEL_7x7
-median = dai.StereoDepthProperties.MedianFilter.KERNEL_5x5
-desired_fps = 20
+median = dai.StereoDepthProperties.MedianFilter.KERNEL_7x7
+desired_fps = 5
 
 print("StereoDepth config options:")
 print("    Left-Right check:  ", lrcheck)
@@ -84,6 +84,10 @@ xout_rect_left = pipeline.createXLinkOut()
 xout_rect_left.setStreamName("rectified_left")
 xout_rect_right = pipeline.createXLinkOut()
 xout_rect_right.setStreamName("rectified_right")
+xout_sync_left = pipeline.createXLinkOut()
+xout_sync_left.setStreamName("sync_left")
+xout_sync_right = pipeline.createXLinkOut()
+xout_sync_right.setStreamName("sync_right")
 
 if COLOR:
     camRgb = pipeline.create(dai.node.ColorCamera)
@@ -99,6 +103,8 @@ else:
 
 stereo.rectifiedLeft.link(xout_rect_left.input)
 stereo.rectifiedRight.link(xout_rect_right.input)
+stereo.syncedLeft.link(xout_sync_left)
+stereo.syncedRight.link(xout_sync_right)
 
 
 class HostSync:
@@ -160,6 +166,8 @@ with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
     qs.append(device.getOutputQueue("colorize", maxSize=1, blocking=False))
     qs.append(device.getOutputQueue("rectified_left", maxSize=1, blocking=False))
     qs.append(device.getOutputQueue("rectified_right", maxSize=1, blocking=False))
+    qs.append(device.getOutputQueue("sync_left", maxSize=1, blocking=False))
+    qs.append(device.getOutputQueue("sync_right", maxSize=1, blocking=False))
 
     try:
         from projector_3d import PointCloudVisualizer
@@ -191,6 +199,8 @@ with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
                     color = msgs["colorize"].getCvFrame()
                     rectified_left = msgs["rectified_left"].getCvFrame()
                     rectified_right = msgs["rectified_right"].getCvFrame()
+                    sync_left = msgs["sync_left"].getCvFrame()
+                    sync_right = msgs["sync_right"].getCvFrame()
                     depth_vis = cv2.normalize(depth, None, 255, 0, cv2.NORM_INF, cv2.CV_8UC1)
                     depth_vis = cv2.equalizeHist(depth_vis)
                     depth_vis = cv2.applyColorMap(depth_vis, cv2.COLORMAP_HOT)
@@ -198,6 +208,8 @@ with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
                     cv2.imshow("color", color)
                     cv2.imshow("rectified_left", rectified_left)
                     cv2.imshow("rectified_right", rectified_right)
+                    cv2.imshow("sync_left", sync_left)
+                    cv2.imshow("sync_right", sync_right)
                     rgb = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
                     pcl_converter.rgbd_to_projection(depth, rgb)
                     pcl_converter.visualize_pcd()
@@ -209,6 +221,8 @@ with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
             cv2.imwrite(f"{serial_no}_{timestamp}_color.png", color)
             cv2.imwrite(f"{serial_no}_{timestamp}_rectified_left.png", rectified_left)
             cv2.imwrite(f"{serial_no}_{timestamp}_rectified_right.png", rectified_right)
+            cv2.imwrite(f"{serial_no}_{timestamp}_sync_left.png", sync_left)
+            cv2.imwrite(f"{serial_no}_{timestamp}_sync_right.png", sync_right)
             o3d.io.write_point_cloud(f"{serial_no}_{timestamp}.pcd", pcl_converter.pcl, compressed=True)
         elif key == ord("q"):
            break
