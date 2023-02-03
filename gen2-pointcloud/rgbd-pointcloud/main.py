@@ -103,8 +103,8 @@ else:
 
 stereo.rectifiedLeft.link(xout_rect_left.input)
 stereo.rectifiedRight.link(xout_rect_right.input)
-stereo.syncedLeft.link(xout_sync_left)
-stereo.syncedRight.link(xout_sync_right)
+stereo.syncedLeft.link(xout_sync_left.input)
+stereo.syncedRight.link(xout_sync_right.input)
 
 
 class HostSync:
