@@ -125,7 +125,7 @@ class HostSync:
                     break
         # If there are 5 (all) synced msgs, remove all old msgs
         # and return synced msgs
-        if len(synced) == 4:  # color, left, right, depth, nn
+        if len(synced) >= 6:
             # Remove old msgs
             for name, arr in self.arrays.items():
                 for i, obj in enumerate(arr):
