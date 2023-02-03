@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 
 import cv2
 import depthai as dai
@@ -131,6 +132,27 @@ class HostSync:
 
 
 with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
+    serial_no = device.getMxId()
+    print(f'Is EEPROM available: {device.isEepromAvailable()}')
+
+    # User calibration
+    try:
+        with open(f"{serial_no}_user_calibration.json", "w") as outfile:
+            json.dump(device.readCalibration2().eepromToJson(), outfile, indent=2)
+    except Exception as ex:
+        print(f'No user calibration: {ex}')
+
+    # Factory calibration
+    try:
+        with open(f"{serial_no}_factory_calibration.json", "w") as outfile:
+            json.dump(device.readFactoryCalibration().eepromToJson(), outfile, indent=2)
+    except Exception as ex:
+        print(f'No factory calibration: {ex}')
+
+    with open(f"{serial_no}_raw_user_calibration.json", "w") as outfile:
+        json.dump(device.readCalibrationRaw(), outfile)
+    with open(f"{serial_no}_raw_factory_calibration.json", "w") as outfile:
+        json.dump(device.readFactoryCalibrationRaw(), outfile)
 
     device.setIrLaserDotProjectorBrightness(1200)
     qs = []
@@ -155,7 +177,6 @@ with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
         intrinsics = calibData.getCameraIntrinsics(dai.CameraBoardSocket.RIGHT, dai.Size2f(w, h))
     pcl_converter = PointCloudVisualizer(intrinsics, w, h)
 
-    serial_no = device.getMxId()
     sync = HostSync()
     depth_vis, color, rect_left, rect_right = None, None, None, None
 
@@ -190,4 +211,4 @@ with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
             cv2.imwrite(f"{serial_no}_{timestamp}_rectified_right.png", rectified_right)
             o3d.io.write_point_cloud(f"{serial_no}_{timestamp}.pcd", pcl_converter.pcl, compressed=True)
         elif key == ord("q"):
-            break
+           break
