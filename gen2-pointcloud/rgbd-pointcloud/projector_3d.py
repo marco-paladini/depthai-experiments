@@ -6,7 +6,7 @@ import numpy as np
 import open3d as o3d
 
 class PointCloudVisualizer():
-    def __init__(self, intrinsic_matrix, width, height):
+    def __init__(self, intrinsic_matrix, width, height, display=True):
         self.R_camera_to_world = np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]]).astype(np.float64)
         self.depth_map = None
         self.rgb = None
@@ -18,14 +18,15 @@ class PointCloudVisualizer():
                                                                          intrinsic_matrix[1][1],
                                                                          intrinsic_matrix[0][2],
                                                                          intrinsic_matrix[1][2])
-        self.vis = o3d.visualization.Visualizer()
-        self.vis.create_window(window_name="Point Cloud")
-        self.vis.add_geometry(self.pcl)
-        origin = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.3, origin=[0, 0, 0])
-        self.vis.add_geometry(origin)
-        view_control = self.vis.get_view_control()
-        view_control.set_constant_z_far(1000)
-        self.isstarted = False
+        self.vis = None
+        if display:
+            self.vis = o3d.visualization.Visualizer()
+            self.vis.create_window(window_name="Point Cloud")
+            self.vis.add_geometry(self.pcl)
+            origin = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.3, origin=[0, 0, 0])
+            self.vis.add_geometry(origin)
+            view_control = self.vis.get_view_control()
+            view_control.set_constant_z_far(1000)
 
     def rgbd_to_projection(self, depth_map, rgb, downsample = True, remove_noise = False):
         rgb_o3d = o3d.geometry.Image(rgb)
