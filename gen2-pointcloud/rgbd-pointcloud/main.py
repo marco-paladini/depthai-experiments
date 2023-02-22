@@ -188,6 +188,7 @@ with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
 
     sync = HostSync()
     depth_vis, color, rect_left, rect_right = None, None, None, None
+    start_time = time.time()
 
     while True:
         for q in qs:
@@ -216,7 +217,10 @@ with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
                         cv2.imshow("sync_right", sync_right)
                         pcl_converter.visualize_pcd()
 
-        key = ord("s")
+        elapsed = time.time() - start_time
+        key = 0
+        if not DISPLAY and elapsed > 10:
+            key = ord("s")
         if DISPLAY:
             key = cv2.waitKey(10)
         if key == ord("s"):
