@@ -21,6 +21,7 @@ class FPS:
 
 fps = FPS()
 COLOR = True
+DISPLAY = False
 
 lrcheck = True  # Better handling for occlusions
 extended = False  # Closer-in minimum depth, disparity range is doubled
@@ -204,17 +205,20 @@ with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
                     depth_vis = cv2.normalize(depth, None, 255, 0, cv2.NORM_INF, cv2.CV_8UC1)
                     depth_vis = cv2.equalizeHist(depth_vis)
                     depth_vis = cv2.applyColorMap(depth_vis, cv2.COLORMAP_HOT)
-                    cv2.imshow("depth", depth_vis)
-                    cv2.imshow("color", color)
-                    cv2.imshow("rectified_left", rectified_left)
-                    cv2.imshow("rectified_right", rectified_right)
-                    cv2.imshow("sync_left", sync_left)
-                    cv2.imshow("sync_right", sync_right)
                     rgb = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
                     pcl_converter.rgbd_to_projection(depth, rgb)
-                    pcl_converter.visualize_pcd()
+                    if DISPLAY:
+                        cv2.imshow("depth", depth_vis)
+                        cv2.imshow("color", color)
+                        cv2.imshow("rectified_left", rectified_left)
+                        cv2.imshow("rectified_right", rectified_right)
+                        cv2.imshow("sync_left", sync_left)
+                        cv2.imshow("sync_right", sync_right)
+                        pcl_converter.visualize_pcd()
 
-        key = cv2.waitKey(1)
+        key = ord("s")
+        if DISPLAY:
+            key = cv2.waitKey(10)
         if key == ord("s"):
             timestamp = str(int(time.time()))
             cv2.imwrite(f"{serial_no}_{timestamp}_depth.png", depth_vis)
@@ -224,5 +228,8 @@ with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
             cv2.imwrite(f"{serial_no}_{timestamp}_sync_left.png", sync_left)
             cv2.imwrite(f"{serial_no}_{timestamp}_sync_right.png", sync_right)
             o3d.io.write_point_cloud(f"{serial_no}_{timestamp}.pcd", pcl_converter.pcl, compressed=True)
+            if not DISPLAY:
+                print("done")
+                break
         elif key == ord("q"):
            break
