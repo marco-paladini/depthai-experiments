@@ -6,7 +6,7 @@ import numpy as np
 import open3d as o3d
 
 class PointCloudVisualizer():
-    def __init__(self, intrinsic_matrix, width, height, display=True):
+    def __init__(self, intrinsic_matrix, width, height, display = True):
         self.R_camera_to_world = np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]]).astype(np.float64)
         self.depth_map = None
         self.rgb = None

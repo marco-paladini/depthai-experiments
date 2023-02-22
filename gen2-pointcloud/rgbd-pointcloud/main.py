@@ -184,7 +184,7 @@ with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
     else:
         w, h = monoRight.getResolutionSize()
         intrinsics = calibData.getCameraIntrinsics(dai.CameraBoardSocket.RIGHT, dai.Size2f(w, h))
-    pcl_converter = PointCloudVisualizer(intrinsics, w, h)
+    pcl_converter = PointCloudVisualizer(intrinsics, w, h, display=DISPLAY)
 
     sync = HostSync()
     depth_vis, color, rect_left, rect_right = None, None, None, None
