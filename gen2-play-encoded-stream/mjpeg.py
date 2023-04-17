@@ -19,7 +19,7 @@ xout = pipeline.create(dai.node.XLinkOut)
 xout.setStreamName("mjpeg")
 videoEnc.bitstream.link(xout.input)
 
-with dai.Device(pipeline) as device:
+with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
     # Output queue will be used to get the encoded stream
     q = device.getOutputQueue("mjpeg")
 

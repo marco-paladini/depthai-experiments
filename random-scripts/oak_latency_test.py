@@ -1,4 +1,3 @@
-
 import depthai as dai
 import threading
 import time
@@ -29,7 +28,7 @@ def send_buff(q):
         timestamps.append(time.time())
         time.sleep(0.2)
 
-with dai.Device(pipeline) as device:
+with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
 
     qin = device.getInputQueue("xin", 1, blocking=True)
     qout = device.getOutputQueue("xout", 1, blocking=True)

@@ -13,7 +13,7 @@ for device_info in device_infos:
         break
 
 if ip is None:
-    raise Exception("No POE device found!")
+    ip = "192.168.122.111"
 
 print('Connecting to ', ip, '...')
 

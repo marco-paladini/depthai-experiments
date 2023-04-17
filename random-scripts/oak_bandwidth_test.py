@@ -63,7 +63,7 @@ xout.input.setQueueSize(2)
 xout.setStreamName("xout")
 script.outputs['xout'].link(xout.input)
 
-with dai.Device(pipeline) as device:
+with dai.Device(pipeline, dai.DeviceInfo("192.168.122.111")) as device:
     device: dai.Device
     qin = device.getInputQueue("xin", 2, blocking=True)
     qout = device.getOutputQueue("xout", 2, blocking=True)

@@ -21,7 +21,7 @@ class FPS:
 
 fps = FPS()
 COLOR = True
-DISPLAY = False
+DISPLAY = True
 
 lrcheck = True  # Better handling for occlusions
 extended = False  # Closer-in minimum depth, disparity range is doubled
